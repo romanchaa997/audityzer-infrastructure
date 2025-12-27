@@ -1,0 +1,37 @@
+# Kubernetes namespace for Audityzer application
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: audityzer
+  labels:
+    name: audityzer
+    environment: production
+    managed-by: terraform
+  annotations:
+    description: "Audityzer application namespace"
+    team: "platform"
+---
+# Network Policy for namespace isolation
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: audityzer
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+---
+# Resource Quota
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: audityzer-quota
+  namespace: audityzer
+spec:
+  hard:
+    requests.cpu: "100"
+    requests.memory: "200Gi"
+    limits.cpu: "200"
+    limits.memory: "400Gi"
+    pods: "1000"
