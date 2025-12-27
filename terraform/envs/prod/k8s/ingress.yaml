@@ -1,0 +1,54 @@
+# Kubernetes Ingress configuration for Audityzer
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: audityzer-ingress
+  namespace: audityzer
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - api.audityzer.com
+        - app.audityzer.com
+      secretName: audityzer-tls
+  rules:
+    - host: api.audityzer.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: audityzer-api
+                port:
+                  number: 8080
+    - host: app.audityzer.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: audityzer-frontend
+                port:
+                  number: 3000
+---
+# Certificate Issuer for Let's Encrypt
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: ops@audityzer.com
+    privateKeySecretRef:
+      name: letsencrypt-prod
+    solvers:
+      - http01:
+          ingress:
+            class: nginx
